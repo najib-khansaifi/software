@@ -1,0 +1,13 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import {ROOMS} from '../src/data/rooms.js'; import {matchesRoom,filterRooms,normalizeRequirements} from '../src/domain/filtering.js';
+test('exact capacity matches',()=>assert.equal(matchesRoom(ROOMS[0],{attendees:10,equipment:[]}),true));
+test('insufficient capacity does not match',()=>assert.equal(matchesRoom(ROOMS[0],{attendees:11,equipment:[]}),false));
+test('single equipment matches',()=>assert.equal(matchesRoom(ROOMS[1],{attendees:5,equipment:['Microphone']}),true));
+test('missing equipment fails',()=>assert.equal(matchesRoom(ROOMS[1],{attendees:5,equipment:['Computers']}),false));
+test('all selected equipment required',()=>assert.equal(matchesRoom(ROOMS[5],{attendees:20,equipment:['Projector','Microphone','Video conference']}),true));
+test('all-selected fails when one missing',()=>assert.equal(matchesRoom(ROOMS[5],{attendees:20,equipment:['Projector','Computers']}),false));
+test('capacity 29 leaves lecture room only',()=>assert.deepEqual(filterRooms(ROOMS,{attendees:29,equipment:[]}).map(r=>r.id),['F-510']));
+test('video conference filters two rooms',()=>assert.deepEqual(filterRooms(ROOMS,{attendees:5,equipment:['Video conference']}).map(r=>r.id),['N-201','F-510']));
+test('empty state possible',()=>assert.equal(filterRooms(ROOMS,{attendees:60,equipment:[]}).length,0));
+test('blocked room can match catalog filter',()=>assert.equal(filterRooms(ROOMS,{attendees:6,equipment:['Whiteboard']}).some(r=>r.id==='Q-404'),true));
+test('normalization floors attendee count',()=>assert.equal(normalizeRequirements(8.9,[]).attendees,8));
+test('duplicate equipment removed',()=>assert.deepEqual(normalizeRequirements(2,['Projector','Projector']).equipment,['Projector']));

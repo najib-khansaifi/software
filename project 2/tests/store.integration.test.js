@@ -1,0 +1,12 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import {createStore} from '../src/state/store.js'; import {ROOMS} from '../src/data/rooms.js'; const make=()=>createStore({rooms:ROOMS,now:540});
+test('initial selection is first matching room',()=>assert.equal(make().getView().room.id,'N-201'));
+test('capacity change refreshes matching list',()=>{const s=make();s.setAttendees(29);assert.deepEqual(s.getView().matching.map(r=>r.id),['F-510']);});
+test('equipment toggle refreshes matching list',()=>{const s=make();s.toggleEquipment('Computers');assert.deepEqual(s.getView().matching.map(r=>r.id),['B-112']);});
+test('no matches clears selected room',()=>{const s=make();s.setAttendees(60);assert.equal(s.getView().room,null);});
+test('selecting room changes selected room',()=>{const s=make();s.selectRoom('H-118');assert.equal(s.getView().room.id,'H-118');});
+test('check creates availability result',()=>{const s=make();s.setTime('11:00','12:00');s.check();assert.ok(s.getView().availability);});
+test('switching room recomputes prior query',()=>{const s=make();s.setTime('10:00','10:20');s.check();const first=s.getView().availability.code;s.selectRoom('A-305');const second=s.getView().availability.code;assert.notEqual(first,second);});
+test('blocked selection never available',()=>{const s=make();s.setAttendees(1);s.selectRoom('Q-404');s.setTime('11:00','11:30');s.check();assert.equal(s.getView().availability.code,'blocked');});
+test('filter change clears checked state',()=>{const s=make();s.check();s.setAttendees(20);assert.equal(s.getView().availability,null);});
+test('equipment filter clears stale selection',()=>{const s=make();s.selectRoom('N-201');s.toggleEquipment('Computers');assert.equal(s.getView().room.id,'B-112');});
+test('same query differs by room bookings',()=>{const s=make();s.setTime('11:00','11:30');s.check();const north=s.getView().availability.available;s.selectRoom('A-305');const atlas=s.getView().availability.available;assert.equal(north,true);assert.equal(atlas,false);});

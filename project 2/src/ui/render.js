@@ -1,0 +1,5 @@
+import {formatTime} from '../domain/time.js';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function roomCard(room,selected){ return `<button class="room-card ${selected?'selected':''}" data-room="${esc(room.id)}"><div class="room-top"><span class="room-id">${esc(room.id)}</span>${room.blocked?'<span class="badge blocked">Blocked</span>':'<span class="badge open">Open</span>'}</div><strong>${esc(room.name)}</strong><span>${room.capacity} seats</span><small>${room.equipment.map(esc).join(' · ')}</small></button>`; }
+export function bookings(room){ if(!room) return ''; if(!room.bookings.length) return '<li>No existing bookings</li>'; return room.bookings.map(([s,e])=>`<li>${formatTime(s)} - ${formatTime(e)}</li>`).join(''); }
+export function status(result){ if(!result) return '<div class="status neutral">Choose a room and press Check availability.</div>'; const cls=result.available?'success':'danger'; return `<div class="status ${cls}"><strong>${result.available?'Available':'Unavailable'}</strong><span>${esc(result.message)}</span></div>`; }

@@ -1,0 +1,18 @@
+import {readFile,mkdir,writeFile} from 'node:fs/promises'; import path from 'node:path'; import {fileURLToPath} from 'node:url';
+import {ROOMS,EQUIPMENT} from '../src/data/rooms.js'; import {NOW,NOW_LABEL} from '../src/config.js'; import {createStore} from '../src/state/store.js'; import {roomCard,bookings,status} from '../src/ui/render.js';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'); const css=await readFile(path.join(root,'src/ui/styles.css'),'utf8'); const out=path.resolve(root,'../../evidence/rendered'); await mkdir(out,{recursive:true});
+function body(view){const {state,matching,room,availability}=view;return `<header class="hero"><div><p class="eyebrow">CAMPUSPULSE / SMART CAMPUS</p><h1>Room Scout</h1><p>Find a room that fits your group, equipment and time window.</p></div><div class="clock"><span>SIMULATED NOW</span><strong>${NOW_LABEL}</strong><small>Max 120 min</small></div></header><main class="layout"><aside class="filters panel"><h2>1. Set requirements</h2><label>Attendees<input type="number" value="${state.attendees}"></label><fieldset><legend>Required equipment</legend>${EQUIPMENT.map(x=>`<label class="chip"><input type="checkbox" ${state.equipment.includes(x)?'checked':''}><span>${x}</span></label>`).join('')}</fieldset><div class="match-count"><strong>${matching.length}</strong><span>matching room${matching.length===1?'':'s'}</span></div></aside><section class="rooms panel"><div class="section-head"><div><h2>2. Choose a room</h2><p>Only rooms matching every selected requirement appear.</p></div></div><div class="room-grid">${matching.length?matching.map(r=>roomCard(r,r.id===state.selectedRoomId)).join(''):'<div class="empty"><strong>No rooms match</strong><span>Reduce attendees or remove an equipment requirement.</span></div>'}</div></section><section class="checker panel"><h2>3. Check availability</h2>${room?`<div class="selected-summary"><div><span>Selected room</span><strong>${room.name}</strong></div><span class="capacity">${room.capacity} seats</span></div><div class="time-row"><label>Start<input type="time" value="${state.start}"></label><label>End<input type="time" value="${state.end}"></label></div><button class="primary">Check availability</button>${status(availability)}<div class="bookings"><h3>Existing bookings</h3><ul>${bookings(room)}</ul></div>`:'<div class="empty tall"><strong>No room selected</strong><span>Adjust the filters to reveal a room.</span></div>'}</section></main><footer>Fictional classroom data · No login · No database · No live API</footer>`}
+function make(actions=[]){const s=createStore({rooms:ROOMS,now:NOW});for(const [k,v] of actions){if(k==='attendees')s.setAttendees(v);if(k==='eq')s.toggleEquipment(v);if(k==='room')s.selectRoom(v);if(k==='time')s.setTime(v[0],v[1]);if(k==='check')s.check();}return s.getView();}
+const scenarios={
+'01_default':[],
+'02_capacity':[['attendees',29]],
+'03_equipment':[['attendees',8],['eq','Video conference']],
+'04_empty':[['attendees',60]],
+'05_available':[['room','N-201'],['time',['11:00','12:00']],['check']],
+'06_overlap':[['room','A-305'],['time',['11:15','12:00']],['check']],
+'07_blocked':[['attendees',1],['room','Q-404'],['time',['11:00','11:30']],['check']],
+'08_switch':[['room','A-305'],['time',['11:00','11:30']],['check']],
+'09_mobile':[['attendees',8],['eq','Projector']]
+};
+for(const [name,actions] of Object.entries(scenarios)){const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body>${body(make(actions))}</body></html>`;await writeFile(path.join(out,name+'.html'),html)}
+console.log('Evidence pages generated:',Object.keys(scenarios).length);

@@ -1,0 +1,14 @@
+You are editing my Software Engineering Assignment #04 project named CampusPulse Room Scout.
+
+Keep the existing business rules, room data, tests, and six-room catalog. Do NOT add authentication, database, payments, Supabase, or external APIs.
+
+Make only a small deployment-ready visual refinement so my published version is uniquely mine:
+1. Keep the deep teal header and coral Check button.
+2. Add a small "CampusPulse" circular CP logo mark beside the Room Scout heading.
+3. Add a subtle selected-room pulse outline animation (respect prefers-reduced-motion).
+4. Keep all functionality and responsive behavior unchanged.
+5. Run the tests. Fix only issues caused by your change.
+6. Publish the app to a NEW unique bolt.host URL.
+7. Return the final published URL and the final test count.
+
+Do not rename rooms or change booking data, because my report and test evidence use the current dataset.
